@@ -4,8 +4,11 @@ import { writeToFile, readFromFile } from "../utils";
 
 export class Parser {
   private fileName = "My Clippings.txt";
+  
   private regex =
-    /(.+) \((.+)\)\r*\n- Your Highlight (at|on) (location|Location|page)( |(.+))([0-9]+)-([0-9]+) \| Added on ([a-zA-Z]+), ([a-zA-Z]+|[0-9]+) ([0-9]+|[a-zA-Z]+),? ([0-9]{4}) ([0-9]+):([0-9]+):([0-9]+\s? A?P?M?)\r*\n\r*\n(.+)/gm;
+      /(.+) \((.+)\)\r*\n- (Your Highlight|Highlight)\s?(at|on|) (Loc\.|location|Location|page|Page ([0-9]+) \| Loc\.)\s+([0-9]+)\s?-?([0-9]+)\s+\| Added on ([a-zA-Z]+), ([a-zA-Z]+|[0-9]+) ([0-9]+|[a-zA-Z]+),? ([0-9]{4}),? ([0-9]+):([0-9]+)\s?|(|:([0-9]+))\s?(A?P?M?)\r*\n\r*\n(.+)/gm;
+
+
   private splitter = /=+\r*\n/gm;
   private nonUtf8 = /\uFEFF/gmu;
   private clippings: Clipping[] = [];
@@ -33,10 +36,12 @@ export class Parser {
     if (match) {
       const title = match[1];
       let author = match[2];
-      const location = `${match[6]}-${match[7]}`;
-      const date = `${match[8]}, ${match[9]} ${match[10]}, ${match[11]}`;
-      const time = `${match[12]}:${match[13]}:${match[14]} ${match[15]}`;
-      const highlight = match[16];
+      let startPos = match[6];
+      let endPos = match[7];
+      const location = `${startPos}${(endPos ? '-' + endPos : '')}`; 
+      const date = `${match[11]}, ${match[12]} ${match[13]}, ${match[14]}`;
+      const time = `${match[16]}:${match[17]} ${match[20]}`;
+      const highlight = match[21];
 
       // If the author name contains comma, fix it
       if (author.includes(",")) {
