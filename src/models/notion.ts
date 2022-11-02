@@ -39,6 +39,10 @@ export class Notion {
     }
   };
 
+  getHighlightHeadingId = async (bookId: string) => {
+    return bookId;
+  }
+
   /* Method to sync highlights to notion */
   syncHighlights = async (books: GroupedClipping[]) => {
     try {
@@ -54,8 +58,11 @@ export class Notion {
           if (bookId) {
             console.log(`📚 Book already present, appending highlights`);
             // append unsynced highlights at the end of the page
+            const highlightHeadingId = await this.getHighlightHeadingId(bookId);
+            //todo:gfiorini testare se esiste un paragrafo con un certo nome in una pagina di notion
+            //se non esiste aggiungere un makeBlocks, altrimenti aggiunge la quote in fondo
             await this.notion.appendBlockChildren(
-              bookId,
+              highlightHeadingId,
               makeBlocks(book.highlights, BlockType.quote)
             );
           } else {

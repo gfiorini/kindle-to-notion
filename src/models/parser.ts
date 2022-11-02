@@ -4,11 +4,8 @@ import { writeToFile, readFromFile } from "../utils";
 
 export class Parser {
   private fileName = "My Clippings.txt";
-  
   private regex =
-      /(.+) \((.+)\)\r*\n- (Your Highlight|Highlight)\s?(at|on|) (Loc\.|location|Location|page|Page ([0-9]+) \| Loc\.)\s+([0-9]+)\s?(-?([0-9]+)|)\s+\| Added on ([a-zA-Z]+), (.+)\r*\n\r*\n(.+)/gm;
-
-
+    /(.+) \((.+)\)\r*\n- (Evidenziazione|Your Highlight|Highlight)\s?(a|at|on|) (Pos\.|Loc\.|location|Location|pagina ([0-9]+) \| Pos\.|page|Page ([0-9]+) \| Loc\.)\s+([0-9]+)\s?(-?([0-9]+)|)\s+\| (Added on |Aggiunta il )([a-zA-Zì]+),? (.+)\r*\n\r*\n(.+)/gm;
   private splitter = /=+\r*\n/gm;
   private nonUtf8 = /\uFEFF/gmu;
   private clippings: Clipping[] = [];
@@ -32,16 +29,22 @@ export class Parser {
   };
 
   /* Method add the parsed clippings to the clippings array */
-  addToClippingsArray = (group: RegExpExecArray | null) => {
-    if (group) {
-      const title = group[1];
-      let author = group[2];
-      let page = group[6];
-      let startPos = group[7];
-      let endPos = group[9];
-      const location = `${startPos}${(endPos ? '-' + endPos : '')}`; 
-      const datetime = group[11];
-      const highlight = group[12];
+  addToClippingsArray = (match: RegExpExecArray | null) => {
+    if (match) {
+
+      console.log('********************************');
+
+      const title = match[1];
+      let author = match[2];
+      const page = `${match[7]}`;
+      const startLocation = `${match[8]}`;
+      const endLocation = `${match[10]}`;
+      let location = startLocation;
+      if (endLocation){
+        location += '-' + endLocation;
+      }
+      const datetime = `${match[13]}`;
+      const highlight = match[14];
 
       // If the author name contains comma, fix it
       if (author.includes(",")) {
@@ -51,7 +54,14 @@ export class Parser {
         author = `${names[1]} ${names[0]}`;
       }
 
-      this.clippings.push({ title, author, location, page, datetime, highlight });
+      console.log('title', title);
+      console.log('author', author);
+      console.log('page', page);
+      console.log('location', location);
+      console.log('datetime', datetime);
+      console.log('highlight', highlight);
+
+      this.clippings.push({ title, author, page, location, datetime, highlight });
     }
   };
 
@@ -87,7 +97,6 @@ export class Parser {
     // split clippings using splitter regex
     const clippingsSplit = clippingsFiltered.split(this.splitter);
 
-    console.log('clippingsSplit', clippingsSplit);
     // parse clippings using regex
     for (let i = 0; i < clippingsSplit.length - 1; i++) {
       const clipping = clippingsSplit[i];
